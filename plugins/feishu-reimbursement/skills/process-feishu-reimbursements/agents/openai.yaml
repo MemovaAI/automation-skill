@@ -1,0 +1,4 @@
+interface:
+  display_name: "飞书自动报销"
+  short_description: "先验费用与凭证，再完成查重、飞书提交、验单与归档"
+  default_prompt: "使用 $process-feishu-reimbursements 先检查费用真实性、发票或特殊凭证、替票和重复风险，再按稳定流程在飞书准备报销或付款申请。"

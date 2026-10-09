@@ -1,0 +1,11 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "feishu-reimbursement",
+  "version": "0.1.0",
+  "description": "Private team workflow for validating, preparing, submitting, verifying, and archiving Feishu reimbursements and payment requests.",
+  "author": {
+    "name": "杭州能量橙子科技有限公司"
+  },
+  "license": "UNLICENSED",
+  "keywords": ["feishu", "reimbursement", "payment", "finance"]
+}

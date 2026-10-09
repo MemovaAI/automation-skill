@@ -1,0 +1,23 @@
+.DS_Store
+.env
+.env.*
+*.log
+*.tmp
+*.bak
+__pycache__/
+*.py[cod]
+
+# Never commit live financial or identity materials.
+private/
+data/
+invoices/
+payroll/
+exports/
+*.pdf
+*.xlsx
+*.xls
+*.csv
+*.jpg
+*.jpeg
+*.png
+*.heic
