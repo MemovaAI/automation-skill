@@ -20,7 +20,8 @@ Do not select a form until the expense/evidence gate in `reimbursement-must-read
 - `费用发生日期`: use the actual expense date; if a bundle spans dates, ask for the intended reporting date.
 - `报销金额`: reconcile to invoice totals before form entry.
 - `收款账户`: select the saved employee/company account and verify bank plus last four.
-- `附件`: accept original `.pdf`, `.jpg`, `.jpeg`, `.png`, and `.heic` files case-insensitively. Upload every intended original once and preserve its filename and extension. Do not silently replace an image with a converted PDF.
+- `必交材料`: for each reimbursement require invoice/approved alternative, completed-payment screenshot, product-purpose explanation, and product/use screenshot. Reuse supplied materials, request only missing items, and stop before live-form preparation when incomplete.
+- `附件`: upload the invoice, payment screenshot, and product/use screenshot, and retain the product purpose in the Chinese business fields. Accept original `.pdf`, `.jpg`, `.jpeg`, `.png`, and `.heic` files case-insensitively. Upload every intended original once and preserve its filename and extension. Do not silently replace an image with a converted PDF.
 - `凭证状态`: retain the internal classification `凭证初审通过`, `无票或特殊凭证待财务复核`, `不合规或疑似替票`, or `信息不足`. Do not put an unapproved no-invoice case into the live form.
 - `研发归集`: record only `非研发` or `申请研发归集，待财务/审计认定`. Never state that the automation has recognized a reimbursed item as an eligible R&D or subsidy expense.
 
@@ -61,6 +62,8 @@ For every overseas reimbursement line item:
 
 Never treat a renamed file as new when its hash matches an approved or pending item.
 
+Apply the transaction duplicate decision to invoice and payment/order evidence matched to the same Feishu transaction. A shared product screenshot or purpose note may legitimately support multiple purchases; its hash match alone must not block a new transaction. Report that match as reused supporting evidence and verify transaction identifiers separately.
+
 The bundled duplicate script exits successfully by default and reports matches in its output. Add `--fail-on-duplicate` only when a nonzero exit should block an automated pipeline.
 
 ## Feishu record checks
@@ -79,11 +82,13 @@ Match at least form type, amount, date, payee/account label, and reason. Use att
 ## Folder contract
 
 ```text
-报销工作站/
+SharePoint 公司文档库/报销工作站/
   待提交/                 # shared company queue; candidates only
   已处理/
     <员工姓名>/           # submitted and detail-verified queue copies
 ```
+
+Resolve and verify the company SharePoint site, document library, drive ID, and folder item IDs using `team-config.md`. The authoritative queue is the cloud hierarchy shown above. A local OneDrive sync folder is an upload cache and requires verified mapping plus server-side checks. Do not create a queue on a personal drive or local desktop when the company queue is unavailable.
 
 All colleagues use this shared queue; do not require personal `待提交/已处理` folders. A queue file should be named `收款人_报销事由_费用日期_金额_原文件名.ext` when practical. Never include full bank-account numbers or other sensitive identifiers in filenames.
 
@@ -104,6 +109,18 @@ Processing another person's files requires an explicit delegated-submission inst
 Move every queue copy used by the approval to `已处理/<员工姓名>/` only after the new approval detail has been verified, and create that employee folder when it does not exist. `已处理` means the automation submission task is closed, not that the approval is approved or paid. Do not create extra queue states unless the user requests them. Do not move company originals from their source repository. If the destination filename already exists, compare hashes and stop rather than overwriting. A submitted approval without corresponding archived queue copies is incomplete: recover the exact original from the current task source or verified approval attachment, archive it without resubmitting, and verify the resulting hashes and paths.
 
 Use the entire `已处理` tree as the recursive duplicate-check scope, including every employee folder and `已处理/历史记录`.
+
+### Server-side archive verification
+
+After the Feishu approval detail passes verification, archive the full evidence bundle and the product-purpose note in the verified company library. Use a SharePoint connector or authenticated SharePoint browser view for cloud operations and checks. A native picker can use a verified synced cache for Feishu attachments.
+
+1. Record each expected file's name, source SHA-256, evidence role, and associated approval instance code. Include the product-purpose note, even when its text was submitted in a form field.
+2. Resolve the employee destination under the verified company library's `报销工作站/已处理` folder. Create it only with applicable authorization. Never overwrite an existing item. For a retry, reuse an existing destination only after its cloud content matches the expected source; stop on conflicts.
+3. Move the staged cloud items or wait for an authorized local sync move to complete. Re-read the destination from SharePoint after the operation. Verify site/library identity, parent hierarchy, item ID, filename, byte size, and content. Compare SHA-256 when available; otherwise download each cloud item and compute its SHA-256. A different provider hash or byte size alone cannot prove byte identity.
+4. Verify that the cloud `待提交` folder no longer contains the task copies that were archived. Preserve originals outside the queue. If a retry finds identical copies at both locations, follow the applicable authorization policy before removing the pending copy.
+5. Report the cloud folder/file URLs and item IDs, checklist coverage, and verification result. A local path, sync icon, or successful local move alone is insufficient.
+
+If cloud archiving or verification fails after submission, report `已提交，SharePoint归档未完成`, retain the approval code, and identify the missing checks/files. Resume archiving without submitting another approval. Report the task complete only when every expected evidence item has been verified in the company SharePoint archive.
 
 ## Account privacy
 
@@ -126,6 +143,8 @@ Require all checks to pass:
 - amount reconciles to the source;
 - date is correct or the stated assumption is accepted;
 - saved account matches payee, bank, and last four;
+- invoice/approved alternative, payment screenshot, product-purpose explanation, and product/use screenshot are complete for every reimbursement; all required screenshots and invoices are attached, and the purpose is in the form;
+- company SharePoint queue identity and access have been verified;
 - required original attachment is present;
 - user confirms the final submission action.
 
