@@ -37,7 +37,7 @@ Treat `公司文档库/报销工作站` above as the business-facing description
 ## Finance review
 
 - Finance owner: the organization-designated finance reviewer for the current task.
-- Do not assume a permanent named individual. If the reviewer is not available from current instructions or approved local configuration, ask before submitting any no-invoice, special-evidence, tax, or R&D-classification case.
+- Do not assume a permanent named individual. If the reviewer is not available from current instructions or approved local configuration, ask before submitting any no-invoice, special-evidence, or tax case.
 
 ## Local-only values
 

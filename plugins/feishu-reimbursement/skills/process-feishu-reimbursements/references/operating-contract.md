@@ -15,15 +15,14 @@ Do not select a form until the expense/evidence gate in `reimbursement-must-read
 
 ### Reimbursement
 
-- `报销类别`: use the user's instruction or the form's closest valid choice; do not infer from amount alone.
+- `报销类别`: use the user's instruction or the form's closest valid choice; do not infer from amount alone. This is a structured Feishu dropdown: open it and click the exact option, then close the menu and re-read the saved field. Never use `setValue`, injected text, or the visible label alone, because the displayed text can diverge from the stored option ID. After submission, verify the category again on the approval detail page and stop subsequent work if it differs.
 - `报销事由` and `报销内容`: use a concise description supported by the source.
 - `费用发生日期`: use the actual expense date; if a bundle spans dates, ask for the intended reporting date.
 - `报销金额`: reconcile to invoice totals before form entry.
 - `收款账户`: select the saved employee/company account and verify bank plus last four.
-- `必交材料`: for each reimbursement require invoice/approved alternative, completed-payment screenshot, product-purpose explanation, and product/use screenshot. Reuse supplied materials, request only missing items, and stop before live-form preparation when incomplete.
-- `附件`: upload the invoice, payment screenshot, and product/use screenshot, and retain the product purpose in the Chinese business fields. Accept original `.pdf`, `.jpg`, `.jpeg`, `.png`, and `.heic` files case-insensitively. Upload every intended original once and preserve its filename and extension. Do not silently replace an image with a converted PDF.
+- `必交材料`: for each reimbursement require exactly three evidence categories: invoice/approved alternative, completed-payment record, and product-use screenshot. Reuse supplied materials, request only missing items, and stop before live-form preparation when incomplete. Product purpose is a business field and filename component, not a separate evidence file.
+- `附件`: upload the invoice, payment record, and product-use screenshot. Retain the product purpose in the Chinese business fields and queue attachment filenames; never create a separate purpose-note attachment. Accept original `.pdf`, `.jpg`, `.jpeg`, `.png`, and `.heic` files case-insensitively. Upload every intended original once and preserve its filename and extension. Do not silently replace an image with a converted PDF.
 - `凭证状态`: retain the internal classification `凭证初审通过`, `无票或特殊凭证待财务复核`, `不合规或疑似替票`, or `信息不足`. Do not put an unapproved no-invoice case into the live form.
-- `研发归集`: record only `非研发` or `申请研发归集，待财务/审计认定`. Never state that the automation has recognized a reimbursed item as an eligible R&D or subsidy expense.
 
 ### Invoice image rules
 
@@ -62,7 +61,7 @@ For every overseas reimbursement line item:
 
 Never treat a renamed file as new when its hash matches an approved or pending item.
 
-Apply the transaction duplicate decision to invoice and payment/order evidence matched to the same Feishu transaction. A shared product screenshot or purpose note may legitimately support multiple purchases; its hash match alone must not block a new transaction. Report that match as reused supporting evidence and verify transaction identifiers separately.
+Apply the transaction duplicate decision to invoice and payment/order evidence matched to the same Feishu transaction. A shared product-use screenshot may legitimately support multiple purchases; its hash match alone must not block a new transaction. Report that match as reused supporting evidence and verify transaction identifiers separately.
 
 The bundled duplicate script exits successfully by default and reports matches in its output. Add `--fail-on-duplicate` only when a nonzero exit should block an automated pipeline.
 
@@ -112,9 +111,9 @@ Use the entire `已处理` tree as the recursive duplicate-check scope, includin
 
 ### Server-side archive verification
 
-After the Feishu approval detail passes verification, archive the full evidence bundle and the product-purpose note in the verified company library. Use a SharePoint connector or authenticated SharePoint browser view for cloud operations and checks. A native picker can use a verified synced cache for Feishu attachments.
+After the Feishu approval detail passes verification, archive the full three-category evidence bundle in the verified company library. Use a SharePoint connector or authenticated SharePoint browser view for cloud operations and checks. A native picker can use a verified synced cache for Feishu attachments. Do not create or archive a separate purpose-note file.
 
-1. Record each expected file's name, source SHA-256, evidence role, and associated approval instance code. Include the product-purpose note, even when its text was submitted in a form field.
+1. Record each expected file's name, source SHA-256, evidence role, and associated approval instance code. Expected evidence roles are invoice/approved alternative, payment record, and product-use screenshot.
 2. Resolve the employee destination under the verified company library's `报销工作站/已处理` folder. Create it only with applicable authorization. Never overwrite an existing item. For a retry, reuse an existing destination only after its cloud content matches the expected source; stop on conflicts.
 3. Move the staged cloud items or wait for an authorized local sync move to complete. Re-read the destination from SharePoint after the operation. Verify site/library identity, parent hierarchy, item ID, filename, byte size, and content. Compare SHA-256 when available; otherwise download each cloud item and compute its SHA-256. A different provider hash or byte size alone cannot prove byte identity.
 4. Verify that the cloud `待提交` folder no longer contains the task copies that were archived. Preserve originals outside the queue. If a retry finds identical copies at both locations, follow the applicable authorization policy before removing the pending copy.
@@ -137,13 +136,12 @@ Require all checks to pass:
 - invoice/alternative evidence has passed the expense gate, with no substitute-invoice indicators;
 - seller, buyer/entity, item/service, amount, date, and payment evidence are mutually consistent;
 - any no-invoice, overseas, or special-evidence path has the required finance approval;
-- any R&D tag includes a named project and supporting relationship/allocation evidence and remains pending finance/audit recognition;
 - no pending/approved duplicate;
-- reason/category matches the request;
+- reason/category matches the request; the category was selected through the real dropdown option and re-read after the menu closed;
 - amount reconciles to the source;
 - date is correct or the stated assumption is accepted;
 - saved account matches payee, bank, and last four;
-- invoice/approved alternative, payment screenshot, product-purpose explanation, and product/use screenshot are complete for every reimbursement; all required screenshots and invoices are attached, and the purpose is in the form;
+- invoice/approved alternative, payment record, and product-use screenshot are complete for every reimbursement; all three evidence categories are attached, and the purpose is in the form and queue attachment filenames;
 - company SharePoint queue identity and access have been verified;
 - required original attachment is present;
 - user confirms the final submission action.
@@ -153,6 +151,6 @@ Require all checks to pass:
 Do not report success from a click alone. Confirm the detail page and capture:
 
 ```text
-instance_code, status, form_type, reason, amount, date,
+instance_code, status, form_type, category, reason, amount, date,
 masked_account_label, attachment_count
 ```
