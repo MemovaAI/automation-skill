@@ -18,6 +18,8 @@ Turn a file or folder into a traceable reimbursement/payment task while preventi
 ## Non-negotiable rules
 
 - Treat finance, payroll, invoices, identities, and bank data as sensitive. Read only the authorized paths and expose the minimum necessary fields.
+- For every employee reimbursement, require the invoice (or finance-approved alternative), payment screenshot, product/business-purpose explanation, and supporting product/use screenshot. Reuse supplied evidence and ask only for missing items. Include the complete evidence bundle in the Feishu submission and shared archive.
+- Resolve and verify the company SharePoint document library before queue operations. Completion requires a server-side archive check under `公司文档库/报销工作站/已处理/<员工姓名>`; a local directory or OneDrive sync icon alone is insufficient.
 - Run the expense/evidence gate before duplicate checking or form preparation. A valid-looking invoice does not by itself prove that an expense is reimbursable.
 - Never accept an invoice whose seller, buyer, item/service, amount, or transaction background differs from the actual business. Treat suspected substitute invoices (`替票`) as a hard stop.
 - A missing invoice is not permission to invent or substitute evidence. Mark it `无票或特殊凭证待财务复核`; do not submit until the named finance owner explicitly approves the evidence path.
@@ -53,7 +55,7 @@ When a colleague first asks Codex to use this Skill for a reimbursement, treat t
 6. Open macOS **System Settings > Privacy & Security** and guide the colleague to enable **Screen Recording**, **Accessibility**, and any displayed **Automation/App Control** permission required for Codex Computer Use to control Feishu and the system file picker. These security prompts must be approved personally by the colleague; Codex must not claim to approve them. Resume the same task immediately after the colleague finishes.
 7. Prove the Computer Use permissions with an actual reversible test: read the visible Feishu state, open Feishu's attachment picker, use `Command+Shift+G` to navigate to an exact local source directory, verify the expected file is visible, and cancel without uploading. This dry run must prove control of both Feishu and the native file picker. Installation status alone is not sufficient.
 8. Open the configured Feishu organization and forms, then verify the requested payee has a saved account selectable from `收款账户`.
-9. Locate the configured shared queue's `待提交` and `已处理` folders and verify they are readable and writable. Do not require personal queue folders.
+9. Resolve the company SharePoint site and document library using `references/team-config.md`. Verify server-side access to `公司文档库/报销工作站/待提交` and `公司文档库/报销工作站/已处理`. Record the site URL, library/drive ID, and folder item IDs for this task. If a local OneDrive sync path is used for uploads, verify its mapping to these exact cloud folders. If cloud verification is unavailable, report the missing access and stop before live submission.
 10. Resolve the current colleague's default reimbursement name from a user-authored instruction or user-local Codex preference. If it is not configured, ask once before listing or opening queue files.
 
 Do not start the live form until every applicable authorization and reversible test has passed. If any check fails, identify the exact missing authorization and give the single next action needed, then resume validation; do not fall back to asking the colleague to select or upload routine attachments manually.
@@ -69,7 +71,7 @@ Choose one mode:
 - **Check only**: compare files and report whether they are duplicates or already submitted.
 - **Prepare**: parse sources and fill a draft, stopping before final submission.
 - **Submit**: prepare, confirm, submit, and verify a specific request.
-- **Reconcile**: match files to Feishu records and archive only verified approved items.
+- **Reconcile**: match files to Feishu records and close queue copies only after submission and approval-detail verification. Pending approvals may be filed under `已处理`; report their actual status separately.
 
 Do not broaden a check-only request into a submission or file move.
 
@@ -80,7 +82,8 @@ Identify and reconcile only the minimum needed facts:
 ```text
 business_entity, applicant_or_payee, actual_seller,
 actual_item_or_service, business_purpose, amount, date,
-payment_evidence, invoice_or_alternative_evidence
+payment_evidence, invoice_or_alternative_evidence,
+product_purpose, product_use_screenshot
 ```
 
 Check that the expense is for company business and that the selected form is correct:
@@ -90,6 +93,8 @@ Check that the expense is for company business and that the selected form is cor
 - Do not convert a direct company payment into an employee reimbursement merely to simplify the workflow.
 
 Reconcile the invoice or alternative evidence with the real transaction. Stop when the buyer/entity, seller, item/service, amount, or business purpose is inconsistent; when the expense appears personal; or when an invoice appears altered, cropped, or substituted.
+
+For **报销申请**, apply the mandatory evidence checklist in `references/reimbursement-must-read.md` to each expense. The payment screenshot must show a completed payment and reconcile to the transaction. Product purpose must explain the actual company work, and the supporting screenshot must show the corresponding product, order, subscription, usage, or service. Use supplied chat text for the purpose when clear; retain it in the form and a task-specific purpose note in the shared archive. Do not infer purpose from the invoice alone or invent screenshots. Missing evidence is `信息不足` and blocks live-form preparation and submission. Payment applications retain their separate evidence rules, including payments that have not yet occurred.
 
 Classify the evidence before continuing:
 
@@ -112,7 +117,9 @@ Collect only:
 form_type, business_entity, payee, reason, category, amount,
 expense_or_payment_date, payment_method, source_paths,
 expected_account_label, attachment_paths, evidence_status,
-rd_project_tag
+rd_project_tag, evidence_checklist,
+sharepoint_site_url, sharepoint_drive_id, pending_folder_id,
+processed_folder_id, archive_items
 ```
 
 For payroll, use the value under the exact `实发工资` header. Do not substitute `应发合计`.
@@ -133,10 +140,10 @@ In self-service mode, list and process only files matching the exact current-col
 
 Before duplicate checking or form preparation, stage every source that is not already under `报销工作站/待提交`:
 
-1. Copy the original bytes into `待提交`; never move or alter the original task attachment.
+1. Resolve `待提交` in the verified company SharePoint library. For reimbursement, copy the invoices, payment screenshots, and product/use screenshots there and preserve the product-purpose explanation in the task's purpose note. For payment applications, stage the applicable contracts, bills, and other required evidence. Preserve the original task attachments. For a local sync path, verify each uploaded queue copy server-side before using it.
 2. Name the queue copy with the exact current-colleague prefix and, when practical, the pattern `收款人_报销事由_费用日期_金额_原文件名.ext`.
 3. If the destination name exists, compare SHA-256 hashes. Reuse an identical copy; stop for review when the bytes differ.
-4. Verify the source and queue-copy hashes match and re-list the destination. Set `source_paths` and `attachment_paths` to the stable queue-copy paths used by the live form.
+4. Verify the source and queue-copy hashes match and re-list the destination through SharePoint. If the server cannot provide SHA-256, download the cloud file and compute it. Do not treat an unverified local sync copy as staged. Record the cloud item identifiers separately from the verified local queue-copy/download paths needed by Feishu's native file picker; do not pass a SharePoint URL as a local file path.
 
 A request to reimburse or submit the explicitly attached files authorizes this queue-staging copy as part of the requested workflow. Do not ask for a second confirmation merely to create the copy. Missing queue copies after direct task upload are a failed preparation check, not an optional archival condition.
 
@@ -163,7 +170,7 @@ Then query Feishu's initiated reimbursement/payment records and match form type,
 
 Apply this decision:
 
-- Exact hash match plus an approved or pending Feishu record: stop; report the record and do not resubmit.
+- Exact invoice/transaction-evidence hash match plus a matching approved or pending Feishu transaction: stop; report the record and do not resubmit. A reused product screenshot or purpose note alone is not a duplicate transaction. Reconcile the invoice number, payment/order reference, and Feishu record before blocking a reimbursement.
 - Same amount/date but different hash: inspect invoice numbers/content before deciding.
 - No reliable match: continue and mark the result `未发现重复` rather than `绝对无重复`.
 
@@ -193,7 +200,7 @@ Use the logged-in Feishu desktop client in the correct company organization.
 2. Fill ordinary fields once.
 3. Choose the saved account from the account dropdown.
 4. If the payee is outside the visible list, scroll the account list and re-read the page state.
-5. Upload every intended original PDF or image exactly once from its verified `待提交` queue-copy path, preserving its filename and extension.
+5. For reimbursement, upload the full mandatory evidence bundle, including invoice, payment screenshot, and product/use screenshot. For payment applications, upload the evidence required for that payment type; do not require a screenshot of a payment that has not occurred. Put the purpose explanation in the business fields. Upload every intended original PDF or image exactly once from its verified `待提交` queue-copy path, preserving its filename and extension.
 6. Drive the native file picker with Computer Use. Use `Command+Shift+G`, enter the exact queue-copy path, verify the selected filename, and choose it without handing routine selection to the colleague.
 7. After choosing an attachment, wait for the attachment card to show the expected filename and a stable completed state, then re-read the page before taking any other action.
 8. Never retry an upload only because the attachment card is delayed. If two identical cards appear, stop and remove the extra copy only after explicit confirmation.
@@ -216,6 +223,7 @@ Open the created approval and verify:
 - reason, amount, date, and payee match;
 - the full `收款账户` block exists and shows the expected bank and last four;
 - every intended original PDF/image attachment is present, recognizable, and has the expected filename/extension;
+- for reimbursement, the payment screenshot and product/use screenshot are present, and the product-purpose explanation is visible in the business fields; for payment applications, the applicable payment evidence requirements are met;
 - an approval instance code is available.
 
 If any value is wrong, stop subsequent tasks and report the exact mismatch. Withdraw only with explicit authorization.
@@ -226,12 +234,14 @@ After submission, first verify the created approval detail as required in step 8
 
 ```text
 报销工作站/待提交/<filename>
--> 报销工作站/已处理/<员工姓名>/<filename>
+-> SharePoint 公司文档库/报销工作站/已处理/<员工姓名>/<filename>
 ```
 
-This closes the queue item even while the approval is pending; it does not mean the reimbursement has been approved or paid. Never move unrelated company originals. Never overwrite an existing destination file: compare hashes and stop for review if the destination name already exists. After moving, verify the destination listing, the archived hashes, and that the source queue no longer contains any copy used by the approval.
+This closes the queue item even while the approval is pending; it does not mean the reimbursement has been approved or paid. Never move unrelated company originals. Never overwrite an existing destination file: compare hashes and stop for review if the destination name already exists. Apply the server-side archive verification procedure in `references/operating-contract.md` to every invoice, payment screenshot, product/use screenshot, and purpose note. Verify the company site/library, final parent path, item IDs, content hashes, and absence from the cloud pending folder. Local file existence, a completed local move, or a sync icon cannot satisfy closure.
 
 Every submitted attachment must have a corresponding archived queue copy. If a verified approval unexpectedly has no queue copy, mark closure incomplete, do not resubmit, recover the exact original from the current task source or the verified approval attachment, verify its identity, and place it in `已处理/<员工姓名>/` before reporting the workflow complete.
+
+If Feishu submission succeeded but SharePoint archiving or cloud verification fails, report `已提交，SharePoint归档未完成` with the instance code and exact missing items. Retry only the archive operation after checking existing destination items. Never resubmit the approval to repair archiving, and never report completion until the server-side checks pass.
 
 ## Stop conditions
 
@@ -241,6 +251,8 @@ Stop without submission when any of these occurs:
 - stale or unrelated draft;
 - duplicate/repeated input characters;
 - ambiguous payee or multiple unverified accounts;
+- missing invoice, payment screenshot, product-purpose explanation, or product/use screenshot for reimbursement;
+- company SharePoint queue identity or access cannot be verified before submission;
 - missing attachment or amount mismatch;
 - personal or non-business expense;
 - invoice buyer/entity, seller, item/service, or amount does not match the actual transaction;
@@ -260,5 +272,5 @@ Report only the useful audit trail:
 - approval instance code and status, if submitted;
 - duplicate evidence, if found;
 - evidence status and any finance/audit review still required;
-- final queue-file location, if moved;
+- verified SharePoint company-library archive path, cloud folder/file links and item IDs, evidence checklist, and cloud-verification result; if verification failed, state archive closure is incomplete;
 - any remaining human review.
