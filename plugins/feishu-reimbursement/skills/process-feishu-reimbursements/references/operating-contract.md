@@ -23,7 +23,6 @@ Do not select a form until the expense/evidence gate in `reimbursement-must-read
 - `必交材料`: for each reimbursement require exactly three evidence categories: invoice/approved alternative, completed-payment record, and product-use screenshot. Reuse supplied materials, request only missing items, and stop before live-form preparation when incomplete. Product purpose is a business field and filename component, not a separate evidence file.
 - `附件`: upload the invoice, payment record, and product-use screenshot. Retain the product purpose in the Chinese business fields and queue attachment filenames; never create a separate purpose-note attachment. Accept original `.pdf`, `.jpg`, `.jpeg`, `.png`, and `.heic` files case-insensitively. Upload every intended original once and preserve its filename and extension. Do not silently replace an image with a converted PDF.
 - `凭证状态`: retain the internal classification `凭证初审通过`, `无票或特殊凭证待财务复核`, `不合规或疑似替票`, or `信息不足`. Do not put an unapproved no-invoice case into the live form.
-- `研发归集`: record only `非研发` or `申请研发归集，待财务/审计认定`. Never state that the automation has recognized a reimbursed item as an eligible R&D or subsidy expense.
 
 ### Invoice image rules
 
@@ -137,7 +136,6 @@ Require all checks to pass:
 - invoice/alternative evidence has passed the expense gate, with no substitute-invoice indicators;
 - seller, buyer/entity, item/service, amount, date, and payment evidence are mutually consistent;
 - any no-invoice, overseas, or special-evidence path has the required finance approval;
-- any R&D tag includes a named project and supporting relationship/allocation evidence and remains pending finance/audit recognition;
 - no pending/approved duplicate;
 - reason/category matches the request; the category was selected through the real dropdown option and re-read after the menu closed;
 - amount reconciles to the source;

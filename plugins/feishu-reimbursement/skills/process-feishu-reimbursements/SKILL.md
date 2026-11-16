@@ -1,6 +1,6 @@
 ---
 name: process-feishu-reimbursements
-description: Process company reimbursements and payment requests from invoice PDFs, invoice images, PDF bundles, payroll spreadsheets, folders, or natural-language instructions through expense-evidence validation, duplicate detection, source parsing, Feishu form preparation, saved-account selection, submission verification, and queue archiving. Use for requests mentioning 自动化报销、报销工作站、待提交、PDF发票、图片发票、JPG、JPEG、PNG、HEIC、费用报销、工资付款、付款申请、收款账户、查重、替票、无票、境外订阅、研发费用、飞书提交、审批验单或已处理归档.
+description: Process company reimbursements and payment requests from invoice PDFs, invoice images, PDF bundles, payroll spreadsheets, folders, or natural-language instructions through expense-evidence validation, duplicate detection, source parsing, Feishu form preparation, saved-account selection, submission verification, and queue archiving. Use for requests mentioning 自动化报销、报销工作站、待提交、PDF发票、图片发票、JPG、JPEG、PNG、HEIC、费用报销、工资付款、付款申请、收款账户、查重、替票、无票、境外订阅、飞书提交、审批验单或已处理归档.
 ---
 
 # Process Feishu Reimbursements
@@ -23,7 +23,7 @@ Turn a file or folder into a traceable reimbursement/payment task while preventi
 - Run the expense/evidence gate before duplicate checking or form preparation. A valid-looking invoice does not by itself prove that an expense is reimbursable.
 - Never accept an invoice whose seller, buyer, item/service, amount, or transaction background differs from the actual business. Treat suspected substitute invoices (`替票`) as a hard stop.
 - A missing invoice is not permission to invent or substitute evidence. Mark it `无票或特殊凭证待财务复核`; do not submit until the named finance owner explicitly approves the evidence path.
-- Do not represent an expense as tax-deductible, VAT-creditable, R&D-eligible, or subsidy-eligible. Those are separate finance/audit determinations.
+- Do not represent an expense as tax-deductible, VAT-creditable, or subsidy-eligible. Those are separate finance/audit determinations.
 - In the shared work queue, default to self-service isolation: resolve the current colleague's name first and read only files whose names start with the exact `姓名_` prefix. Do not open, submit, or move another colleague's files.
 - Never persist full card or account numbers in this Skill, indexes, logs, or summaries. Use payee name, bank, and last four digits only.
 - Preserve every source file. When the user asks this Skill to process files attached in the current Codex task or located outside the shared queue, create verified byte-for-byte queue copies under `报销工作站/待提交`; keep the originals untouched. Do not otherwise rename, move, delete, or rewrite originals without explicit authorization for the exact target.
@@ -108,7 +108,6 @@ Apply special routes:
 
 - **Natural-person small occasional service**: collect a receipt with company name, recipient name and ID number, actual item/service, amount, date, signature, plus payment evidence. Check the current tax threshold rather than assuming a durable amount. Always route to finance review.
 - **Overseas software/API/cloud/subscription**: require the original invoice/receipt or statement, order/plan and service period, payment evidence, business use, and RMB conversion basis. Add contract, approval, or usage evidence when material or recurring. Route tax-withholding and deductibility questions to finance.
-- **R&D-related expense**: record the project name, direct relationship, and allocation basis when shared. Label only `申请研发归集，待财务/审计认定`; never promise R&D or subsidy eligibility.
 
 ### 3. Establish the task record
 
@@ -118,7 +117,7 @@ Collect only:
 form_type, business_entity, payee, reason, category, amount,
 expense_or_payment_date, payment_method, source_paths,
 expected_account_label, attachment_paths, evidence_status,
-rd_project_tag, evidence_checklist,
+evidence_checklist,
 sharepoint_site_url, sharepoint_drive_id, pending_folder_id,
 processed_folder_id, archive_items
 ```
@@ -189,7 +188,6 @@ Before touching the live form, show or internally verify:
 收款账户：银行 + 尾号
 附件：
 凭证状态：
-研发归集：非研发 / 申请研发归集，待财务或审计认定
 查重结果：
 ```
 
@@ -262,7 +260,6 @@ Stop without submission when any of these occurs:
 - invoice buyer/entity, seller, item/service, or amount does not match the actual transaction;
 - suspected substitute invoice, altered evidence, or invented expense category;
 - no-invoice or special-evidence route has not been approved by finance;
-- claimed R&D expense lacks a named project, direct relationship, or reasonable allocation evidence;
 - concurrent user interaction changes the UI;
 - account is visible in the form but absent from the submitted detail;
 - exact duplicate already pending or approved.
